@@ -143,7 +143,7 @@ class Validator
 		 * If there are files, we will merge it
 		 * in the data array
 		 */
-		if ( count($_FILES) > 0 ) {
+		if ( isset($_FILES) && count($_FILES) > 0 ) {
 			
 			$callback = function($files){
 				return $files[key($files)];
