@@ -339,6 +339,23 @@ class ValidatorTest extends TestCase
 	}
 
 	/**
+	 * @test
+	 */
+	public function it_should_validate_nullable_with_other_validation()
+	{
+		$_POST = [
+			'email' => '',
+		];
+
+		
+		$validation = $this->validator->make($_POST, [
+			'email' => 'email|nullable',
+		]);
+		
+		$this->assertFalse($validation->fails());
+	}
+
+	/**
 	 * The field under validation must be present and not empty only if all of the other specified fields are present.
 	 * required_with_all:foo,bar,...
 	 * 

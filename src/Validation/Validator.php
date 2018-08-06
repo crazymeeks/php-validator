@@ -623,6 +623,8 @@ class Validator
 	 */
 	protected function validate_nullable( $data, $attribute )
 	{
+		unset($this->messages[$attribute]);
+		
 		return true;
 	}
 
