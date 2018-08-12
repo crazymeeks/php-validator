@@ -253,6 +253,12 @@ class Validator
 	{
 		$exploded = explode('|', $pipe_rules);
 
+
+		# We if required is mixed with nullable
+		if ( ($key = array_search('required', $exploded)) !== false ) {
+			return $pipe_rules;
+		}
+
 		if ( ($key = array_search('nullable', $exploded)) !== false ) {
 
 			$this->has_nullable = true;
