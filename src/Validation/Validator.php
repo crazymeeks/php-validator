@@ -47,6 +47,8 @@ namespace Crazymeeks\Validation;
  * @author Jeff Claud
  */
 
+use Closure;
+use Crazymeeks\Validation\ValidatorException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class Validator
@@ -78,6 +80,7 @@ class Validator
 		'number'              => 'The :attribute must be a number',
 		'required_with_all'   => 'The :attribute field is required when :extras is present.',
 		'strong_password'     => 'Password must contain uppercase, lowercase, number, special characters and at least 8 characters',
+		'url'                 => 'The :attribute must be a valid url',
 	];
 
 
@@ -98,6 +101,14 @@ class Validator
 	 * @var string|null
 	 */
 	private $new_field_name = null;
+
+	/**
+	 * Flag indicates that we have
+	 * a nullable rules
+	 * 
+	 * @var bool
+	 */
+	private $has_nullable;
 
 
 	/**
@@ -202,13 +213,61 @@ class Validator
 		$this->parseData($data);
 		
 		foreach( $rules as $attribute => $rule ){
+			
+			$this->has_nullable = false;
+
+			# If we found nullable rule in any position of the string
+			# we will swap it to the begining of the pipes rules
+			# so we can properly validate the this rule if included
+			# in other rules(e.g nullable|min:2|max:30).
+			$rule = $this->prependNullableRule($rule);
+			
 			// explode the rule
 			foreach( (explode('|', $rule)) as $the_rule ){
 				$this->validateAttributes( $attribute, $the_rule );
 			}
+
+			
+			$this->complete(function($messageBag) use($attribute){
+
+				if ( $this->has_nullable ) {
+					unset($messageBag[$attribute]);
+				}
+
+				return $messageBag;
+			 });
 		}
 
 		return $this;
+	}
+
+	/**
+	 * Always prepend nullable rule at the begining of the pipes
+	 * rules string
+	 * 
+	 * @param string $pipe_rules  The pipe(|) delimeted rules
+	 * 
+	 * @return string
+	 */
+	private function prependNullableRule( $pipe_rules )
+	{
+		$exploded = explode('|', $pipe_rules);
+
+		if ( ($key = array_search('nullable', $exploded)) !== false ) {
+
+			$this->has_nullable = true;
+
+			# Unset rule nullable
+			unset($exploded[$key]);
+
+			# Prepend nullable that the begining
+			array_unshift($exploded, 'nullable');
+
+			$pipe_rules = implode('|', $exploded);
+
+		}
+
+		return $pipe_rules;
 	}
 
 	/**
@@ -217,10 +276,11 @@ class Validator
 	 * @param string $attribute
 	 * @param string $the_rule
 	 * 
-	 * @return void
+	 * @return $this
 	 */
 	private function validateAttributes( $attribute, $the_rule )
 	{
+
 		$the_rule = $this->extractRules($the_rule);
 
 		$validator = "validate_$the_rule";
@@ -246,6 +306,22 @@ class Validator
 				);
 			}
 		}
+		
+
+		return $this;
+	}
+
+	/**
+	 * Completing the validation
+	 * 
+	 * @param string $rule_name    The rule_name from message bag
+	 * 
+	 * @return void
+	 */
+	private function complete(Closure $callback)
+	{
+		
+		$this->messages = call_user_func($callback, $this->messages);
 		
 	}
 
@@ -283,6 +359,8 @@ class Validator
 				if ( ! $this->{$validator}($this->data, $attribute, $this->extraRules) ) {
 					$this->addFailure($attribute, $the_rule);
 				}
+			} else {
+				throw ValidatorException::validator_not_found($the_rule);
 			}
 		};
 	}
@@ -297,9 +375,6 @@ class Validator
 	 */
 	private function extractExplicitAttributes($attribute, $key = null )
 	{
-		// if ( $key > 0 ) {
-		// 	echo $attribute . ' dfd';exit;
-		// }
 		if ( $this->str_contains( $attribute, '.*' ) && !is_null($key) ) {
 			return $attribute = (str_replace('*', $key, $attribute));
 		}
@@ -623,8 +698,7 @@ class Validator
 	 */
 	protected function validate_nullable( $data, $attribute )
 	{
-		unset($this->messages[$attribute]);
-		
+		//unset($this->messages[$attribute]);
 		return true;
 	}
 
@@ -666,5 +740,18 @@ class Validator
 		return $this->validate_mimes($data, $attribute, ['jpeg', 'png', 'gif', 'bmp', 'svg']);
 	}
 	
+
+	/**
+	 * Validate url
+	 * 
+	 * @param  array $data
+	 * @param  string $attribute The attribute name to validate against data
+	 * 
+	 * @return bool
+	 */
+	protected function validate_url( $data, $attribute )
+	{
+		return isset($data[$attribute]) && ! empty($data[$attribute]) && (filter_var($data[$attribute], FILTER_VALIDATE_URL));
+	}
 
 }

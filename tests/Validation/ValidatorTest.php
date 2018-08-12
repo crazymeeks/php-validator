@@ -330,9 +330,8 @@ class ValidatorTest extends TestCase
 			'zipcode' => '',
 		];
 
-		
 		$validation = $this->validator->make($_POST, [
-			'zipcode' => 'nullable',
+			'zipcode' => 'min:10|nullable|max:20',
 		]);
 		
 		$this->assertFalse($validation->fails());
@@ -397,5 +396,21 @@ class ValidatorTest extends TestCase
 
 	}
 	
+	/**
+	 * @test
+	 */
+	public function it_should_validate_url()
+	{
+		$_POST = [
+			'website' => 'http://google.com'
+		];
+
+		$validation = $this->validator->make($_POST, [
+			'website' => 'url',
+		]);
+
+		$this->assertFalse($validation->fails());
+
+	}
 
 }
