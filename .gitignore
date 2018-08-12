@@ -2,4 +2,4 @@
 /vendor
 .htaccess
 .env
-/.vscode
+.vscode
