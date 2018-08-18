@@ -76,19 +76,6 @@ class ValidatorTest extends TestCase
 		$this->assertFalse($validation->fails());
 	}
 
-	/**
-	 * @test
-	 * @dataProvider Tests\DataProviders\ValidatorDataProvider::dataArray()
-	 */
-	public function it_should_validate_type_array($dataArray)
-	{
-
-		$validation = $this->validator->make($dataArray, [
-			'images' => 'array',
-		]);
-
-		$this->assertFalse($validation->fails());
-	}
 
 	/**
 	 * @test
@@ -172,46 +159,39 @@ class ValidatorTest extends TestCase
 
 	/**
 	 * @test
+	 * @dataProvider Tests\DataProviders\ValidatorDataProvider::array_fields()
 	 */
-	public function it_should_validate_array_of_images()
+	public function it_should_validate_array_of_images($data)
 	{
 		$_FILES = [
-			array(
-				'uploaded_file' => [
-					'name' => 'car.jpg',
-					'type' => 'image/jpg',
-					'tmp_name' => __DIR__ . '/_files/car.jpg',
-					'error' => 0,
-					'size' => 200000,
+			'uploaded_file' => [
+				'name' => [
+					'car.jpg',
+					'car-normal.jpg'
 				],
-			),
-			
-			array(
-				'uploaded_file' => [
-					'name' => 'car.jpg',
-					'type' => 'image/jpg',
-					'tmp_name' => __DIR__ . '/_files/car.jpg',
-					'error' => 0,
-					'size' => 200000,
+				'type' => [
+					'image/jpg',
+					'image/jpg',
 				],
-			),
-
+				'tmp_name' => [
+					__DIR__ . '/_files/car.jpg',
+					__DIR__ . '/_files/car-normal.jpg',
+				],
+				'error' => [
+					0,
+					0
+				],
+				'size' => [
+					200000,
+					1800,
+				],
+			],
 		];
 
-		$_POST = [
-			array(
-				'name' => 'Anderson'
-			),
-			array(
-				'name' => 'dfd'
-			),
-			'email' => 'valid@email.com',
-		];
-
+		$_POST = $data;
 		
 		$validation = $this->validator->make($_POST, [
 			'uploaded_file.*' => 'image',
-			'name.*'          => 'required'
 		]);
 		
 		$this->assertFalse($validation->fails());

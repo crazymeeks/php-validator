@@ -87,12 +87,10 @@ class ValidatorDataProvider
 		 * Example in form <input type="text" name="name[]" value="">
 		 */
 		$_POST = [
-			array(
-				'name' => 'Anderson'
-			),
-			array(
-				'name' => 'ddfd'
-			),
+			'name' => [
+				'anderson',
+				'steven'
+			],
 			'email' => 'valid@email.com',
 		];
 

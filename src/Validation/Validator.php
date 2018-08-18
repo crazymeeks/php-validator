@@ -72,7 +72,6 @@ class Validator
 		'array'               => 'The :attribute must be an array',
 		'image'               => 'The :attribute must be a valid image',
 		'confirmed'           => 'The :attribute must be same with :attribute_confirmation',
-		'image'               => 'The :attribute must a valid image',
 		'mimes'               => 'The :attribute must be a mime type of :extras',
 		'min'                 => 'The :attribute must be atleast minimum of :extras',
 		'max'                 => 'The :attribute must be maximum of :extras',
@@ -126,57 +125,95 @@ class Validator
 			// if $value is array
 			// we are assuming this
 			// is an array of inputs(name="name[]")
-			if ( is_array($value) && is_string(key($value)) ) {
+			if ( is_array($value)) {
 				$me = $this;
-				$this->new_field_name = key($value) . ".$field_name";
+
+				$this->new_field_name =  $field_name;
+				
 				$value = $me->parseData($value);
 			}
+			
+			# Create explicit attribute
+			if ( is_numeric($field_name) ) {
+				
+				$field_name = $this->new_field_name . '.' . $field_name;
+			}
 
-			$this->data[$this->setExplicitAttributes($field_name)] = $value;
+			# If the current $field_name is equal to the $this->new_field_name
+			# it means that this $field_name is an array. We will append .* 
+			# to this field_name then we will unset this fielname_later(field_name.*)
+			# so that is will not be included in the validation
+			if ( $field_name == $this->new_field_name ) {
+				$field_name = $field_name . ".*";
+			}
+			
+			$this->data[$field_name] = $value;
+
 		}
 		# Remove number keys from an array
 		$keys = array_filter(array_keys($this->data), 'is_numeric');
 		$out  = array_diff_key($this->data, array_flip($keys));
-		
-		$this->parseFiles();
+		if ( isset($_FILES) && count($_FILES) > 0 ) {
+			$this->parseFiles($_FILES);
+		}
 		$this->data = array_merge($out, $this->_files);
 	}
 
 	/**
 	 * Parse $_FILES
 	 *
+	 * @param array $_FILES $files
+	 * 
 	 * @return void
 	 */
-	private function parseFiles()
+	private function parseFiles(array $files)
 	{
 
 		/**
 		 * If there are files, we will merge it
 		 * in the data array
 		 */
-		if ( isset($_FILES) && count($_FILES) > 0 ) {
+		if ( isset($files) && count($files) > 0 ) {
 			
-			$callback = function($files){
-				return $files[key($files)];
+			$callback = function($files, $field_name){
+				
+				foreach( (array) $files['size'] as $key => $filesize ){
+					if ( $filesize > 0 ) {
+						$tmp_name = (array) $files['tmp_name'];
+						$name = (array) $files['name'];
+						$this->_files["$field_name.$key"] = new UploadedFile(
+							$tmp_name[$key],
+							 $name[$key]
+						 );
+					}
+				}
 			};
 
-			foreach($_FILES as $attribute => $value){
-
+			foreach($files as $field_name => $value){
+				
 				// if $value is array
 				// we are assuming this
-				// is an array of inputs(file="images[]")
-				if ( is_array($value[key($value)]) ) {
-					$this->new_field_name = key($value) . ".$attribute";// uploaded_file.0
-					$newValue[key($value)] = $value[key($value)];
-					$attribute = key($value);
-					$value = $callback($newValue);
+				// is an array of inputs(name="name[]")
+				if ( is_array($value)) {
+					$me = $this;
+					$this->new_field_name =  $field_name;
+					$value = $callback($value, $field_name);
 				}
-				if ( isset($value['size']) && $value['size'] > 0 ) {
-					$this->_files[$this->setExplicitAttributes($attribute)] = new UploadedFile(
-			           $value['tmp_name'],
-			            $value['name']
-			        );
+				
+				# Create explicit attribute
+				if ( is_numeric($field_name) ) {
+					$field_name = $this->new_field_name . '.' . $field_name;
 				}
+
+				# If the current $field_name is equal to the $this->new_field_name
+				# it means that this $field_name is an array. We will append .* 
+				# to this field_name then we will unset this fielname_later(field_name.*)
+				# so that is will not be included in the validation
+				if ( $field_name == $this->new_field_name ) {
+					$field_name = $field_name . ".*";
+				}
+
+				$this->_files[$field_name] = $value;
 			}
 		}
 	}
@@ -193,10 +230,8 @@ class Validator
 	 */
 	private function setExplicitAttributes($field_name)
 	{
-		$field_name = $this->new_field_name ? $this->new_field_name : $field_name;
-		$this->new_field_name = null;
+		$field_name = $this->new_field_name ? $this->new_field_name . ".$field_name" : $field_name;
 		return $field_name;
-		$this->data[$field_name] = $value;
 	}
 
 	/**
@@ -224,10 +259,10 @@ class Validator
 			
 			// explode the rule
 			foreach( (explode('|', $rule)) as $the_rule ){
+
 				$this->validateAttributes( $attribute, $the_rule );
 			}
 
-			
 			$this->complete(function($messageBag) use($attribute){
 
 				if ( $this->has_nullable ) {
@@ -286,21 +321,20 @@ class Validator
 	 */
 	private function validateAttributes( $attribute, $the_rule )
 	{
-
+		
 		$the_rule = $this->extractRules($the_rule);
 
 		$validator = "validate_$the_rule";
 		
 		$key = 0;
-		
+
+		# Unset all the keys with .* in our data
+		list($var) = array_pad(explode('.', $attribute), 1, '');	
+		unset($this->data["$var.*"]);
+
 		foreach ( $this->data as $field => $value ) {
 
-			list($var) = array_pad(explode('.', $attribute), 1, '');
-			
-			unset($this->data["$var.*"]);
-			
 			if ( $this->str_contains($field, $var) ) {
-				
 				// extract explicit attributes
 				$newAttribute = $this->extractExplicitAttributes($attribute, $key);
 				call_user_func_array($this->run(), [$validator,$newAttribute, $the_rule]);
@@ -344,6 +378,7 @@ class Validator
 	 */
 	private function skipAsteriskAttributes(\Closure $callback, $validator,$attribute, $the_rule)
 	{
+		
 		if ( ! $this->str_contains($attribute, '*') ) {
 			call_user_func_array($callback, [$validator,$attribute, $the_rule]);
 		}
@@ -362,9 +397,11 @@ class Validator
 	{
 		return function($validator, $attribute, $the_rule){
 			if ( method_exists( $this, $validator ) ) {
+				
 				if ( ! $this->{$validator}($this->data, $attribute, $this->extraRules) ) {
 					$this->addFailure($attribute, $the_rule);
 				}
+
 			} else {
 				throw ValidatorException::validator_not_found($the_rule);
 			}
@@ -426,7 +463,7 @@ class Validator
 		if ( $extra ) {
 			$this->extraRules = str_getcsv($extra);
 		}
-
+		
 		return $rule;
 	}
 
@@ -565,19 +602,6 @@ class Validator
 	public function validate_number( $data, $attribute )
 	{
 		return isset($data[$attribute]) && is_numeric($data[$attribute]);
-	}
-
-	/**
-	 * Validate input as type: array
-	 *
-	 * @param array $data
-	 * @param string $attribute The attribute name to validate against data
-	 *
-	 * @return bool
-	 */
-	protected function validate_array( $data, $attribute )
-	{
-		return isset($data[$attribute]) && is_array($data[$attribute]);
 	}
 
 
@@ -719,7 +743,7 @@ class Validator
 	 */
 	protected function validate_mimes( $data, $attribute, $parameters = array() )
 	{
-
+		
 		// Nothing to validate
 		if ( !isset($data[$attribute]) ) {
 			return true;
@@ -728,7 +752,6 @@ class Validator
 		$file = $data[$attribute];
 
 		if ( $file instanceof UploadedFile ) {
-
 			return $file->getPath() !== '' && in_array($file->guessExtension(), $parameters);
 		}
 
