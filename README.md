@@ -11,6 +11,12 @@
 	<a href="https://github.com/crazymeeks/php-validator/stargazers"><img src="https://img.shields.io/github/stars/crazymeeks/php-validator.svg?style=social&label=Star&maxAge=2592000" alt="Star"></a>
 	<a href="https://github.com/crazymeeks/php-validator/network"><img src="https://img.shields.io/github/forks/crazymeeks/php-validator.svg?style=social&label=Fork" alt="Fork"></a>
 </h1>
+<p align="center">
+<a href="https://travis-ci.com/crazymeeks/php-validator"><img src="https://travis-ci.com/crazymeeks/php-validator.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/crazymeeks/php-validator"><img src="https://poser.pugx.org/crazymeeks/php-validator/d/total.svg" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/crazymeeks/php-validator"><img src="https://poser.pugx.org/crazymeeks/php-validator/v/stable.svg" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/crazymeeks/php-validator"><img src="https://poser.pugx.org/crazymeeks/php-validator/license.svg" alt="License"></a>
+</p>
 
 ## Check WIKI for features!
 
