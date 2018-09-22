@@ -153,7 +153,7 @@ class Validator
 		# Remove number keys from an array
 		$keys = array_filter(array_keys($this->data), 'is_numeric');
 		$out  = array_diff_key($this->data, array_flip($keys));
-		if ( isset($_FILES) && count($_FILES) > 0 ) {
+		if ( count($this->removeEmptyFiles()) > 0 ) {
 			$this->parseFiles($_FILES);
 		}
 		$this->data = array_merge($out, $this->_files);
@@ -794,6 +794,27 @@ class Validator
 	protected function validate_url( $data, $attribute )
 	{
 		return isset($data[$attribute]) && ! empty($data[$attribute]) && (filter_var($data[$attribute], FILTER_VALIDATE_URL));
+	}
+
+	/**
+	 * Remove data from $_FILES with size = 0
+	 *
+	 * @return array $_FILES
+	 */
+	public function removeEmptyFiles()
+	{
+		if ( isset($_FILES) ) {
+			foreach ( $_FILES as $key => $files ) {
+				foreach ( (array) $files['size'] as $size ) {
+					if ( $size <= 0 ) {
+						unset($_FILES[$key]);
+					}
+				}
+			}
+			return $_FILES;
+		}
+
+		return [];
 	}
 
 }

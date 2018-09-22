@@ -147,15 +147,46 @@ class ValidatorTest extends TestCase
 				'error' => 0,
 				'size' => 200000,
 			],
+			'anotherfile' => [
+				'name' => '',
+				'type' => '',
+				'tmp_name' =>'',
+				'error' => 4,
+				'size' => 0,
+			],
 		];
 		
 		
-		$validation = $this->validator->make($_POST, [
+		$validation = $this->validator->make($_FILES, [
 			'uploaded_file' => 'image',
+			'anotherfile' => 'required',
 		]);
 		
-		$this->assertFalse($validation->fails());
+		$this->assertTrue($validation->fails());
 
+	}
+
+	/**
+	 * @test
+	 */
+	public function it_should_remove_empty_files()
+	{
+		$_FILES['webimage'] = [
+				'name' => '',
+				'type' => '',
+				'tmp_name' => '',
+				'error' => 4,
+				'size' => 0,
+		];
+		$_FILES['mobileimage'] = [
+			'name' => '',
+			'type' => '',
+			'tmp_name' => '',
+			'error' => 4,
+			'size' => 0,
+		];
+		$result = $this->validator->removeEmptyFiles();
+		$this->assertTrue((count($result)== 0));
 	}
 
 	/**
