@@ -29,11 +29,11 @@
             "type": "package",
             "package": {
                 "name": "crazymeeks/php-validator",
-                "version": "v1.0.0",
+                "version": "v1.0.1",
                 "source": {
                     "url": "git://github.com/crazymeeks/php-validator",
                     "type": "git",
-                    "reference": "v1.0.0"
+                    "reference": "v1.0.1"
                 },
                 "autoload": {
                     "psr-4": {
