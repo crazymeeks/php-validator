@@ -138,6 +138,7 @@ class ValidatorTest extends TestCase
 	 */
 	public function it_should_validate_image()
 	{
+		$_POST = ['name' => 'John'];
 		$_FILES = [
 			'uploaded_file' => [
 				'name' => 'car.jpg',
@@ -149,7 +150,7 @@ class ValidatorTest extends TestCase
 		];
 		
 		
-		$validation = $this->validator->make($_FILES, [
+		$validation = $this->validator->make($_POST, [
 			'uploaded_file' => 'image',
 		]);
 		

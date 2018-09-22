@@ -157,6 +157,10 @@ class Validator
 			$this->parseFiles($_FILES);
 		}
 		$this->data = array_merge($out, $this->_files);
+
+		// echo "<pre>";
+		// print_r($out);
+		// print_r($this->data);exit;
 	}
 
 	/**
@@ -169,6 +173,7 @@ class Validator
 	private function parseFiles(array $files)
 	{
 
+		$this->new_field_name = null;
 		/**
 		 * If there are files, we will merge it
 		 * in the data array
@@ -194,7 +199,9 @@ class Validator
 				// if $value is array
 				// we are assuming this
 				// is an array of inputs(name="name[]")
-				if ( is_array($value)) {
+				
+				if ( is_array($value['name'])) {
+					
 					$me = $this;
 					$this->new_field_name =  $field_name;
 					$value = $callback($value, $field_name);
@@ -210,10 +217,13 @@ class Validator
 				# to this field_name then we will unset this fielname_later(field_name.*)
 				# so that is will not be included in the validation
 				if ( $field_name == $this->new_field_name ) {
+					
 					$field_name = $field_name . ".*";
 				}
+				
+				$this->_files[$field_name] = $callback($value, $field_name);
+				$this->_files = array_filter($this->_files);
 
-				$this->_files[$field_name] = $value;
 			}
 		}
 	}
@@ -750,7 +760,7 @@ class Validator
 		}
 
 		$file = $data[$attribute];
-
+		
 		if ( $file instanceof UploadedFile ) {
 			return $file->getPath() !== '' && in_array($file->guessExtension(), $parameters);
 		}
@@ -765,7 +775,7 @@ class Validator
 	 *  
 	 */
 	protected function validate_image( $data, $attribute )
-	{
+	{	
 		return $this->validate_mimes($data, $attribute, ['jpeg', 'png', 'gif', 'bmp', 'svg']);
 	}
 	
