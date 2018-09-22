@@ -191,7 +191,7 @@ class ValidatorTest extends TestCase
 
 		$_POST = $data;
 		
-		$validation = $this->validator->make($_POST, [
+		$validation = $this->validator->make($_FILES, [
 			'uploaded_file.*' => 'image',
 		]);
 		

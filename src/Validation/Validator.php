@@ -157,10 +157,6 @@ class Validator
 			$this->parseFiles($_FILES);
 		}
 		$this->data = array_merge($out, $this->_files);
-
-		// echo "<pre>";
-		// print_r($out);
-		// print_r($this->data);exit;
 	}
 
 	/**
@@ -201,28 +197,25 @@ class Validator
 				// is an array of inputs(name="name[]")
 				
 				if ( is_array($value['name'])) {
-					
 					$me = $this;
 					$this->new_field_name =  $field_name;
 					$value = $callback($value, $field_name);
-				}
-				
-				# Create explicit attribute
-				if ( is_numeric($field_name) ) {
-					$field_name = $this->new_field_name . '.' . $field_name;
-				}
-
-				# If the current $field_name is equal to the $this->new_field_name
-				# it means that this $field_name is an array. We will append .* 
-				# to this field_name then we will unset this fielname_later(field_name.*)
-				# so that is will not be included in the validation
-				if ( $field_name == $this->new_field_name ) {
+				} else {
+					# Create explicit attribute
+					if ( is_numeric($field_name) ) {
+						$field_name = $this->new_field_name . '.' . $field_name;
+					}
+					# If the current $field_name is equal to the $this->new_field_name
+					# it means that this $field_name is an array. We will append .* 
+					# to this field_name then we will unset this fielname_later(field_name.*)
+					# so that is will not be included in the validation
+					if ( $field_name == $this->new_field_name ) {
+						
+						$field_name = $field_name . ".*";
+					}
 					
-					$field_name = $field_name . ".*";
+					$this->_files[$field_name] = new UploadedFile($value['tmp_name'], $field_name);
 				}
-				
-				$this->_files[$field_name] = $callback($value, $field_name);
-				$this->_files = array_filter($this->_files);
 
 			}
 		}
