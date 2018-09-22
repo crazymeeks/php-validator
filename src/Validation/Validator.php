@@ -334,7 +334,9 @@ class Validator
 		# Unset all the keys with .* in our data
 		list($var) = array_pad(explode('.', $attribute), 1, '');	
 		unset($this->data["$var.*"]);
-
+		if ( count($this->data) <= 0 ) {
+			throw ValidatorException::no_data_to_validate();
+		}
 		foreach ( $this->data as $field => $value ) {
 
 			if ( $this->str_contains($field, $var) ) {
@@ -535,6 +537,14 @@ class Validator
 	 */
 	protected function validate_required( $data, $attribute )
 	{
+		$key = key($data);
+
+		# If we are checking against an array of inputs
+		# We will check if the array has atleast 1 value
+		
+		if ( $this->str_contains($key, '.') && isset($data[$key])) {
+			return true;
+		}
 		return isset($data[$attribute]) && ! empty($data[$attribute]);
 	}
 

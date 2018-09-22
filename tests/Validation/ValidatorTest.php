@@ -336,6 +336,24 @@ class ValidatorTest extends TestCase
 	}
 
 	/**
+	 * @test
+	 */
+	public function validate_required__should_return_true_if_array_of_inputs_is_not_empty()
+	{
+		$_POST = [
+			'name' => [
+				'dfd',
+				''
+			]
+		];
+
+		$validation = $this->validator->make($_POST, [
+			'name' => 'required',
+		]);
+		$this->assertFalse($validation->fails());
+	}
+
+	/**
 	 * The field under validation must be present and not empty only if all of the other specified fields are present.
 	 * required_with_all:foo,bar,...
 	 * 

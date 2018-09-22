@@ -27,4 +27,9 @@ class ValidatorException extends Exception
 
         return new static($message, $code, $previous);
     }
+
+    public static function no_data_to_validate($rule, $code = 500, Exception $previous = null)
+    {
+        return new static('No data to validate', $code, $previous);
+    }
 }
