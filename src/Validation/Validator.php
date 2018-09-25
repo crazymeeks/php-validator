@@ -50,6 +50,7 @@ namespace Crazymeeks\Validation;
 use Closure;
 use Crazymeeks\Validation\ValidatorException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
 
 class Validator
 {
@@ -59,6 +60,8 @@ class Validator
 	 * @var array
 	 */
 	protected $messages = [];
+
+	public static $REMOVE_EMPTY_IMG = true;
 
 	/**
 	 * The array of messages to be translated
@@ -153,7 +156,7 @@ class Validator
 		# Remove number keys from an array
 		$keys = array_filter(array_keys($this->data), 'is_numeric');
 		$out  = array_diff_key($this->data, array_flip($keys));
-		if ( count($this->removeEmptyFiles()) > 0 ) {
+		if (Validator::$REMOVE_EMPTY_IMG && count($this->removeEmptyFiles()) > 0) {
 			$this->parseFiles($_FILES);
 		}
 		$this->data = array_merge($out, $this->_files);
@@ -182,10 +185,13 @@ class Validator
 					if ( $filesize > 0 ) {
 						$tmp_name = (array) $files['tmp_name'];
 						$name = (array) $files['name'];
-						$this->_files["$field_name.$key"] = new UploadedFile(
-							$tmp_name[$key],
-							 $name[$key]
-						 );
+						try{
+							$this->_files["$field_name.$key"] = new UploadedFile(
+								$tmp_name[$key],
+								 $name[$key]
+							 );
+						}catch(FileNotFoundException $e){}
+						
 					}
 				}
 			};
@@ -213,8 +219,9 @@ class Validator
 						
 						$field_name = $field_name . ".*";
 					}
-					
-					$this->_files[$field_name] = new UploadedFile($value['tmp_name'], $field_name);
+					try{
+						$this->_files[$field_name] = new UploadedFile($value['tmp_name'], $field_name);
+					}catch(FileNotFoundException $e){}
 				}
 
 			}
@@ -816,5 +823,4 @@ class Validator
 
 		return [];
 	}
-
 }
