@@ -276,7 +276,9 @@ class Validator
 			$this->complete(function($messageBag) use($attribute){
 
 				if ( $this->has_nullable ) {
-					unset($messageBag[$attribute]);
+					if ( ! $this->validate_required($this->data, $attribute) ) {
+						unset($messageBag[$attribute]);
+					}
 				}
 
 				return $messageBag;
