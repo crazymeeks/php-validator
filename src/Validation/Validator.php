@@ -344,7 +344,7 @@ class Validator
 		list($var) = array_pad(explode('.', $attribute), 1, '');	
 		unset($this->data["$var.*"]);
 		if ( count($this->data) <= 0 ) {
-			throw ValidatorException::no_data_to_validate();
+			throw ValidatorException::no_data_to_validate($the_rule);
 		}
 		foreach ( $this->data as $field => $value ) {
 
